@@ -39,10 +39,10 @@ class Deli_Mailchimp_Plugin
 
         // CREDENTIALS (required)
         // Cle d'api a generer sur MC dev dashboard
-        $this -> apiKey = '065027c53d73e880e1d462271ffd408a-us15';
+        $this -> apiKey = ''; // <------- REPLACE WITH YOUR API KEY
 
         // ID de la liste MC dans laquelle sera inscrit l'abonné
-        $this -> listId = 'b34a75e04b';
+        $this -> listId = ''; // <------- REPLACE WITH YOUR LIST ID
 
     }
 
