@@ -2,7 +2,7 @@
 /**
 Plugin Name: Deli Mailchimp API Integration
 Description: Affichage du formulaire et traitement des requetes avec API v3
-Version: 2017-08
+Version: 0.1.1
 Author: delicyus
 Author URI: http://delicyus.com
 License: GPL2
@@ -11,72 +11,114 @@ License: GPL2
 if ( ! defined( 'WPINC' ) ) { die; }
 
 /**
- * @example     global $Deli_Mailchimp_Plugin;
- *              $Deli_Mailchimp_Plugin -> render_formulaire();
+ * @example     echo do_shortcode('[formulaire-subscribe]');
  *
  * @uses        MAILCHIMP V3
  *              https://developer.mailchimp.com/documentation/mailchimp/guides/manage-subscribers-with-the-mailchimp-api/
- *
- * @Tutorial    https://stackoverflow.com/questions/30481979/adding-subscribers-to-a-list-using-mailchimps-api-v3
  */
 class Deli_Mailchimp_Plugin
 {
     public function __construct()
     {
+        // TRAITEMENT $_POST
         add_action( 'wp_head', array($this , 'subscribe_do') );
-        //
+
+        // SHORTCODE
+        add_shortcode( 'formulaire-subscribe', array( $this , 'shortcode_formulaire' ) );
+
+        // GLOBAL init
         $this -> subscribe_do = false;
+
+        // STYLING CSS classes (optional customisation)
+        $this -> formClass          = 'nl-embed';
+        $this -> textSuccessClass   = 'text-success';
+        $this -> textErrorClass     = 'text-danger';
+        $this -> formRowClass       = 'input-wrapper';
+        $this -> submitBtnClass     = 'submit';
+        $this -> formID             = 'mailchimp-subscribe-form';
+
+        // CREDENTIALS (required)
+        // Cle d'api a generer sur MC dev dashboard
+        $this -> apiKey = '065027c53d73e880e1d462271ffd408a-us15';
+
+        // ID de la liste MC dans laquelle sera inscrit l'abonné
+        $this -> listId = 'b34a75e04b';
+
     }
 
     // RENDER FORMULAIRE
-    public function render_formulaire(){
-        // We display the form
-        ?>
-        <div class="nl-embed" id="mailchimp-subscribe-form">
-            <form method="post" action="#mailchimp-subscribe-form">
-            <?php
-                // We display feedbacks of the form
+    private function render_formulaire(){
+    ?>
+        <div class="<?php echo $this -> formClass; ?>" id="<?php echo $this -> formID; ?>">
+            <form method="post" action="#<?php echo $this -> formID; ?>">
+                <?php
+                // Feebacks strings
                 if( $this -> subscribe_do){
                     // Success
                     if("subscribed"== $this -> subscribe_do -> results -> status){
                         ?>
-                        <div class="text-success ">
-                            *** <?php
-                            echo $this -> l_('bravo-well-keep-in-touch');
-                            ?> ***
+                        <div class="<?php echo $this -> textSuccessClass; ?>">
+                            <?php
+                            echo $this -> l_('bravo');
+                            ?>
                         </div><br />
                         <?php
                     }
                     // Failed
                     if($this -> subscribe_do -> feedbacks){
                         ?>
-                        <div class="text-danger">
+                        <div class="<?php echo $this -> textErrorClass; ?>">
                             <?php
                             foreach($this -> subscribe_do -> feedbacks as $feedback){
                                 echo $feedback;
                             }
                             ?>
-                            <p>******* ! *******</p>
                         </div><br />
                         <?php
                     }
                 }
+
+                // Formulaire
                 ?>
-                <div class="input-wrapper"><label><?php echo $this -> l_('votre-e-mail'); ?></label><input type="text" name="email" value="<?php echo $_POST['email'];?>" /></div>
-                <div class="input-wrapper"><label><?php echo $this -> l_('votre-nom'); ?></label><input type="text" name="firstname" value="<?php echo $_POST['firstname'];?>" /></div>
-                <div class="input-wrapper"><label><?php echo $this -> l_('votre-prenom'); ?></label><input type="text" name="lastname" value="<?php echo $_POST['lastname'];?>" /></div>
-                <input type="submit" name="mailchimp-subscribe" value="<?php echo $this -> l_('recevoir-les-news'); ?>" class="submit" />
+                <div class="<?php echo $this -> formRowClass; ?>">
+                    <label><?php echo $this -> l_('votre-e-mail'); ?></label>
+                    <input type="text" name="email" value="<?php echo $_POST['email'];?>" />
+                </div>
+                <div class="<?php echo $this -> formRowClass; ?>">
+                    <label><?php echo $this -> l_('votre-nom'); ?></label>
+                    <input type="text" name="firstname" value="<?php echo $_POST['firstname'];?>" />
+                </div>
+                <div class="<?php echo $this -> formRowClass; ?>">
+                    <label><?php echo $this -> l_('votre-prenom'); ?></label>
+                    <input type="text" name="lastname" value="<?php echo $_POST['lastname'];?>" />
+                </div>
+                <input type="submit" name="mailchimp-subscribe" value="<?php echo $this -> l_('recevoir-les-news'); ?>" class="<?php echo $this -> submitBtnClass; ?>" />
             </form>
         </div>
         <?php
     }
 
-    // Traitement du formulaire pour subscribe un nouveau abonne
+    // SHORTCODE FORMULAIRE
+    // usage : echo do_shortcode('[formulaire-subscribe]');
+    public function shortcode_formulaire( $atts ) {
+
+        if('' == $this -> apiKey
+            || '' == $this -> listId)
+            return 'ERR : Credentials params missing';
+
+        return $this -> render_formulaire();
+    }
+
+    // TRAITEMENT $_POST :  subscribe un nouvel abonne
+    // @return    $this -> subscribe_do 
     public function subscribe_do(){
 
-        // Trigger the form submission
-        if(!isset($_POST['mailchimp-subscribe'])
-            || ""==$_POST['mailchimp-subscribe'])
+        // Requis pour trigger the form submission
+        if(
+            !isset($_POST['mailchimp-subscribe'])
+            || '' == $_POST['mailchimp-subscribe']
+            || '' == $this -> apiKey
+            || '' == $this -> listId)
         return false;
 
         // Init the returned result
@@ -88,6 +130,7 @@ class Deli_Mailchimp_Plugin
             return false;
 
         // do api call
+        // pour subscribe un nouvel abonne
         $do_api_call = $this -> do_api_call();
 
         // Return
@@ -118,20 +161,14 @@ class Deli_Mailchimp_Plugin
 
    }
 
-    // CREDENTIALS
-    private function get_apiKey(){
-        // Depuis API dev panel
-        return '065027c53d73e880e1d462271ffd408a-us15';
-    }
-
     // REQUETE
     private function do_api_call(){
 
         // API from dev panel
-        $apiKey = $this -> get_apiKey();
+        $apiKey = $this -> apiKey;
 
         // Depuis admin list panel
-        $listId = 'b34a75e04b';
+        $listId = $this -> listId;
 
         // Params pour requete vers API
         $memberId   = md5(strtolower($_POST['email']));
@@ -166,19 +203,29 @@ class Deli_Mailchimp_Plugin
 
     }
 
-    // Strings rendering
+    // RENDER STRINGS
     private function l_($string,$return){
 
-        // Si le plugin deli-i18n existes
-        if(function_exists('l_'))
-            return l_($string,$return);
+        // All plugins strings
+        $strings = array(
+            'bravo'             => 'bravo',
+            'votre-e-mail'      => 'votre-e-mail',
+            'votre-nom'         => 'votre-nom',
+            'votre-prenom'      => 'votre-prenom',
+            'recevoir-les-news' => 'recevoir-les-news',
+            'oups-error'        => 'oups-error',
+            'err-email'         => 'err-email',
+            'err-firstname'     => 'err-firstname',
+            'err-lastname'      => 'err-lastname',
+            );
 
-        // sinon return le string sans rien faire
-        return $string;
-
-
+        // Return (string)
+        return $strings[$string];
     }
+
+
 }
+// Init du plugin dans variable globale
 global $Deli_Mailchimp_Plugin;
 $Deli_Mailchimp_Plugin = new Deli_Mailchimp_Plugin();
 ?>
