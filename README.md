@@ -24,15 +24,24 @@ Select the Mailchimp list you want to target
 Uses Mailchimp API version 3 
 Require an api key that you may get at [Mailchimp's dev pages ](https://developer.mailchimp.com/)
 
+
 ## Installation 
-Install by uploading the folder code('deli-mailchimp') to your code("plugins") folder.
+You can install the plugin by uploading the folder `deli-mailchimp` to your `plugins` folder.
+[here's how](https://codex.wordpress.org/Managing_Plugins#Manual_Plugin_Installation)
+
 
 ## Usage 
-Use the shortcode.
+Use the shortcode into your theme
 This will display the form and the feedbacks.
 
-### Example 
-
+### Example usage into post content
+```html
+[formulaire-subscribe][/formulaire-subscribe]
+```
+### Example usage into PHP code
+```php
+echo do_shortcode('[formulaire-subscribe]');
+```
 
 ## Documentation 
 Mailchimp's API documentation is available [here ](http://developer.mailchimp.com/documentation/mailchimp/)
