@@ -19,7 +19,6 @@ Select the Mailchimp list you want to target
 
 
 
-
 ## Requirements
 Uses Mailchimp API version 3 
 Require an api key that you may get at [Mailchimp's dev pages ](https://developer.mailchimp.com/)
@@ -28,6 +27,12 @@ Require an api key that you may get at [Mailchimp's dev pages ](https://develope
 ## Installation 
 You can install the plugin by uploading the folder `deli-mailchimp` to your `plugins` folder.
 [here's how](https://codex.wordpress.org/Managing_Plugins#Manual_Plugin_Installation)
+
+## Configuration 
+1 - Get an API key from Mailchimp
+2 - Get the Id of the list you want to populate
+3 - Go to Wordpress Dashboard > Settings 
+There's two input fileds where to paster your API KEY and the list ID
 
 
 ## Usage 
@@ -45,3 +50,8 @@ echo do_shortcode('[formulaire-subscribe]');
 
 ## Documentation 
 Mailchimp's API documentation is available [here ](http://developer.mailchimp.com/documentation/mailchimp/)
+
+
+## Help!
+Drop me a line at [delicyus](http://delicyus.com)
+I'll be glad to help

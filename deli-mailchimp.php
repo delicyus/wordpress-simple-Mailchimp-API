@@ -9,13 +9,13 @@ License: GPL2
 */
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) { die; }
-
 /**
  * @example     echo do_shortcode('[formulaire-subscribe]');
  *
  * @uses        MAILCHIMP V3
  *              https://developer.mailchimp.com/documentation/mailchimp/guides/manage-subscribers-with-the-mailchimp-api/
  */
+
 class Deli_Mailchimp_Plugin
 {
     public function __construct()
