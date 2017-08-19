@@ -1,7 +1,7 @@
 <?php
 /**
 Plugin Name: Deli Mailchimp API Integration
-Description: Affichage du formulaire et traitement des requetes avec API v3
+Description: Display forms to add subscriber handled by Mailchimp v3 API
 Version: 0.1.1
 Author: delicyus
 Author URI: http://delicyus.com
