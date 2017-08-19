@@ -26,6 +26,12 @@ class Deli_Mailchimp_Plugin
         // SHORTCODE
         add_shortcode( 'formulaire-subscribe', array( $this , 'shortcode_formulaire' ) );
 
+        // ADMIN PAGE REGISTER
+        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+
+        // ADMIN SETTINGS REGISTER
+        add_filter( 'admin_init' , array( $this, 'register_settings_fields' ) );
+
         // GLOBAL init
         $this -> subscribe_do = false;
 
@@ -39,12 +45,19 @@ class Deli_Mailchimp_Plugin
 
         // CREDENTIALS (required)
         // Cle d'api a generer sur MC dev dashboard
-        $this -> apiKey = ''; // <------- REPLACE WITH YOUR API KEY
+        $this -> apiKey = $this -> get_api_key();
 
         // ID de la liste MC dans laquelle sera inscrit l'abonné
-        $this -> listId = ''; // <------- REPLACE WITH YOUR LIST ID
+        //$this -> listId = 'b34a75e04b';
+        $this -> listId = $this -> get_list_id();
 
+        // Data center
+        $this -> dataCenter = substr( $this -> apiKey ,strpos( $this -> apiKey ,'-')+1);
     }
+
+
+
+    // RENDERING
 
     // RENDER FORMULAIRE
     private function render_formulaire(){
@@ -97,7 +110,6 @@ class Deli_Mailchimp_Plugin
         </div>
         <?php
     }
-
     // SHORTCODE FORMULAIRE
     // usage : echo do_shortcode('[formulaire-subscribe]');
     public function shortcode_formulaire( $atts ) {
@@ -108,8 +120,62 @@ class Deli_Mailchimp_Plugin
 
         return $this -> render_formulaire();
     }
+    // FORM VALIDATION
+    private function validate_form()
+    {
+        // Required fields
+        $feedbacks = false;
 
-    // TRAITEMENT $_POST :  subscribe un nouvel abonne
+        if(!is_email($_POST['email']))
+            $feedbacks['err-email'] = '<div class="text-danger">'.$this -> l_('err-email', true).'</div>';
+
+        if(!sanitize_text_field($_POST['firstname']))
+            $feedbacks['err-firstname'] = '<div class="text-danger">'.$this -> l_('err-firstname', true).'</div>';
+
+        if(!sanitize_text_field($_POST['lastname']))
+            $feedbacks['err-lastname'] = '<div class="text-danger">'.$this -> l_('err-lastname', true).'</div>';
+
+        return $feedbacks;
+    }
+    // RENDER STRINGS
+    private function l_($string,$return){
+
+        // All plugins strings
+        $strings = array(
+            'bravo'             => 'bravo',
+            'votre-e-mail'      => 'votre-e-mail',
+            'votre-nom'         => 'votre-nom',
+            'votre-prenom'      => 'votre-prenom',
+            'recevoir-les-news' => 'recevoir-les-news',
+            'oups-error'        => 'oups-error',
+            'err-email'         => 'err-email',
+            'err-firstname'     => 'err-firstname',
+            'err-lastname'      => 'err-lastname',
+            );
+
+        // Return (string)
+        return $strings[$string];
+    }
+    // GET HTML TEMPLATE 
+    private function get_template_html( $template_name, $attributes = null ) {
+        if ( ! $attributes ) {
+            $attributes = array();
+        }
+
+        ob_start();
+        require( 'templates/' . $template_name . '.php');
+        $html = ob_get_contents();
+        ob_end_clean();
+        return $html;
+    }
+
+
+
+
+
+    // DATAS 
+
+    // DO $_POST :  subscribe un nouvel abonne
     // @return    $this -> subscribe_do 
     public function subscribe_do(){
 
@@ -131,49 +197,23 @@ class Deli_Mailchimp_Plugin
 
         // do api call
         // pour subscribe un nouvel abonne
-        $do_api_call = $this -> do_api_call();
+        $do_api_get = $this -> do_api_get_subscribe_do();
 
         // Return
-        if(200==$do_api_call -> httpCode)
-            $this -> subscribe_do -> results = json_decode($do_api_call -> result);
+        if(200==$do_api_get -> httpCode)
+            $this -> subscribe_do -> results = json_decode($do_api_get -> result);
         else
             $this -> subscribe_do -> feedbacks = array($this -> l_('oups-error','return'));
 
         return $this -> subscribe_do;
     }
+    // REQUESTS TO API
+    // Add a new subcriber
+    private function do_api_get_subscribe_do(){
 
-    // FORM VALIDATION
-    private function validate_form()
-   {
-        // Required fields
-        $feedbacks = false;
-
-        if(!is_email($_POST['email']))
-            $feedbacks['err-email'] = '<div class="text-danger">'.$this -> l_('err-email', true).'</div>';
-
-        if(!sanitize_text_field($_POST['firstname']))
-            $feedbacks['err-firstname'] = '<div class="text-danger">'.$this -> l_('err-firstname', true).'</div>';
-
-        if(!sanitize_text_field($_POST['lastname']))
-            $feedbacks['err-lastname'] = '<div class="text-danger">'.$this -> l_('err-lastname', true).'</div>';
-
-        return $feedbacks;
-
-   }
-
-    // REQUETE
-    private function do_api_call(){
-
-        // API from dev panel
-        $apiKey = $this -> apiKey;
-
-        // Depuis admin list panel
-        $listId = $this -> listId;
-
-        // Params pour requete vers API
+        // PARAMS REQUEST API
         $memberId   = md5(strtolower($_POST['email']));
-        $dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
-        $url        = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listId . '/members/' . $memberId;
+        $url        = 'https://' . $this -> dataCenter . '.api.mailchimp.com/3.0/lists/' . $this -> listId . '/members/' . $memberId;
         $json = json_encode([
             'email_address' => $_POST['email'],
             'status'        => "subscribed", // "subscribed","unsubscribed","cleaned","pending"
@@ -183,13 +223,53 @@ class Deli_Mailchimp_Plugin
             ]
         ]);
 
+        // Requete via CURL 
+        $return = $this -> do_api_get($url , $json , 'PUT');
+        
+        return $return;
+    }
+    // Get list data
+    private function do_api_get_list(){
+
+        // PARAMS REQUEST API
+        $memberId   = md5(strtolower($_POST['email']));
+        $url        = 'https://' . $this -> dataCenter . '.api.mailchimp.com/3.0/lists/' . $this -> listId;
+        $json = json_encode();
+
+        // Requete via CURL 
+        $return = $this -> do_api_get($url , $json , 'GET');
+
+        return $return;
+    } 
+    // Get subscribers from list ID
+    private function do_api_get_subscribers(){
+
+        // PARAMS REQUEST API
+        $memberId   = md5(strtolower($_POST['email']));
+        $url        = 'https://' . $this -> dataCenter . '.api.mailchimp.com/3.0/lists/' . $this -> listId . '/members?count=50';
+        $json = json_encode();
+
+        // Requete via CURL 
+        $return = $this -> do_api_get($url , $json , 'GET');
+               
+        return $return;
+    }        
+    // REQUEST GET to API
+    private function do_api_get( $url , $json , $method){
+
+        if('' == $url  || '' ==  $method )
+            return FALSE;
+
         // Requete via CURL
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
+        if($ch==FALSE)
+            return FALSE;
+
+        curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $this -> apiKey);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST,  $method);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
 
@@ -197,35 +277,94 @@ class Deli_Mailchimp_Plugin
         $result     = curl_exec($ch);
         $httpCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+        if(!$result || !$httpCode)
+            return FALSE;
+
+        // return
         $return -> result = $result;
-        $return -> httpCode = $httpCode;
-        return $return;
-
-    }
-
-    // RENDER STRINGS
-    private function l_($string,$return){
-
-        // All plugins strings
-        $strings = array(
-            'bravo'             => 'bravo',
-            'votre-e-mail'      => 'votre-e-mail',
-            'votre-nom'         => 'votre-nom',
-            'votre-prenom'      => 'votre-prenom',
-            'recevoir-les-news' => 'recevoir-les-news',
-            'oups-error'        => 'oups-error',
-            'err-email'         => 'err-email',
-            'err-firstname'     => 'err-firstname',
-            'err-lastname'      => 'err-lastname',
-            );
-
-        // Return (string)
-        return $strings[$string];
+        $return -> httpCode = $httpCode;    
+        return $return;    
     }
 
 
+
+
+
+
+    // SETTINGS
+
+    // ADMIN PAGE REGISTER
+    public function add_admin_menu() {
+        add_menu_page( 
+            'Mailchimp Wordpress',  
+            'Mailchimp Wordpress', 
+            'manage_options', 
+            'plugin-admin-page', 
+            array($this,'manage_plugin_admin_page'), 
+            'dashicons-admin-tools', 
+            90 );
+    }
+    public function manage_plugin_admin_page(){
+
+        echo $this -> get_template_html( 'plugin-admin-page' );
+    }
+
+    // REGISTER the settings fields needed by the plugin.
+    public function register_settings_fields() {
+
+        // for the API keys
+        register_setting( 'general', 'mailchimp-api-key' );
+
+        add_settings_field(
+            'mailchimp-api-key',
+            '<label for="mailchimp-api-key">Mailchimp API key</label>',
+            array( $this, 'render_mailchimp_api_key_field' ),
+            'general' 
+        );
+
+        // for the list ID
+        register_setting( 'general', 'mailchimp-list-id' );
+
+        add_settings_field(
+            'mailchimp-list-id',
+            '<label for="mailchimp-list-id">Mailchimp List ID </label>',
+            array( $this, 'render_mailchimp_list_id_field' ),
+            'general' 
+        );       
+    }
+    // RENDER settings fields
+    public function render_mailchimp_api_key_field() {
+        $value = get_option( 'mailchimp-api-key', '' );
+        echo '<input type="text" id="mailchimp-api-key" name="mailchimp-api-key" value="' . esc_attr( $value ) . '" />';
+    }    
+    public function render_mailchimp_list_id_field() {
+        $value = get_option( 'mailchimp-list-id', '' );
+        echo '<input type="text" id="mailchimp-list-id" name="mailchimp-list-id" value="' . esc_attr( $value ) . '" />';
+    }
+
+    // GET CREDENTIALS
+    private function get_api_key(){
+        $get_option = get_option( 'mailchimp-api-key', '' );
+        if('' != $get_option)
+            return $get_option;
+
+        return '';          
+    }    
+    private function get_list_id(){
+        $get_option = get_option( 'mailchimp-list-id', '' );
+        if('' != $get_option)
+            return $get_option;
+
+        return '';          
+    }    
 }
+
+
+
+
+//
 // Init du plugin dans variable globale
+//
 global $Deli_Mailchimp_Plugin;
 $Deli_Mailchimp_Plugin = new Deli_Mailchimp_Plugin();
 ?>
