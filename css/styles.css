@@ -1,0 +1,17 @@
+.mailchimp-subscribe {
+	padding: 1em;
+}
+.input-wrapper {
+	padding: 0 1em;
+	margin-bottom: 1em;
+}
+.input-wrapper label{
+	display: block;
+}
+.input-wrapper input{
+	display: block;
+	width: 100%
+}
+.label-required{
+	color: #666
+}
