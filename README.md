@@ -1,15 +1,3 @@
-                _      _
-               | |    | |()
-             __| | ___| |_  ___ _   _ _   _ ___   ___ ___  _ __ ___
-            / _` |/ _ \ | |/ __| | | | | | / __| / __/ _ \| '_ ` _ \
-           | (_| |  __/ | | (__| |_| | |_| \__ \| (_| (_) | | | | | |
-           |     |                              |   |     | | | | | |
-            \____|\___|_|_|\___|\__, |\__,_|___(_)___\___/|_| |_| |_|
-                                 __/ |
-                                |___/
-            web by delicyus.com
-
-
 # Mailchimp API Wordpress plugin #
  
 > A wordpress plugin connected to Mailchimp API 
@@ -55,3 +43,14 @@ Mailchimp's API documentation is available [here ](http://developer.mailchimp.co
 ## Help!
 Drop me a line at [delicyus](http://delicyus.com)
 I'll be glad to help
+
+                _      _
+               | |    | |()
+             __| | ___| |_  ___ _   _ _   _ ___   ___ ___  _ __ ___
+            / _` |/ _ \ | |/ __| | | | | | / __| / __/ _ \| '_ ` _ \
+           | (_| |  __/ | | (__| |_| | |_| \__ \| (_| (_) | | | | | |
+           |     |                              |   |     | | | | | |
+            \____|\___|_|_|\___|\__, |\__,_|___(_)___\___/|_| |_| |_|
+                                 __/ |
+                                |___/
+            web by delicyus.com

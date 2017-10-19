@@ -6,7 +6,6 @@ Version: 0.1.1
 Author: delicyus
 Author URI: http://delicyus.com
 License: GPL2
-Text Domain: deli-mailchimp
 */
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) die; 
@@ -14,6 +13,8 @@ if ( ! defined( 'WPINC' ) ) die;
 /**
  * @example     into template page use : echo do_shortcode('[formulaire-subscribe]');
  * @example     As shortcode use : [formulaire-subscribe][/formulaire-subscribe]
+ *              
+ *  https://github.com/delicyus/wordpress-simple-Mailchimp-API
  *
  * @uses        MAILCHIMP V3
  *              https://developer.mailchimp.com/documentation/mailchimp/guides/manage-subscribers-with-the-mailchimp-api/
@@ -47,7 +48,7 @@ class Deli_Mailchimp_Plugin
         $this -> textErrorClass     = 'text-danger';
         $this -> formRowClass       = 'input-wrapper';
         $this -> submitBtnClass     = 'submit';
-        $this -> labelRequiredClass     = 'label-required';
+        $this -> labelRequiredClass = 'label-required';
         $this -> formID             = 'mailchimp-subscribe-form';
 
         // CREDENTIALS (required)
