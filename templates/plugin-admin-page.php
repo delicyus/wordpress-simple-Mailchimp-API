@@ -9,10 +9,10 @@ $listid = $Deli_Mailchimp_Plugin -> get_list_id();
 	<h1>Mailchimp Wordpress</h1>
 	<hr>
 	<table>
-	<h2>Credentials</h2>
+	<h2>MailChimp API Credentials</h2>
 		<tr>
 			<td width="120">
-				<strong>API key</strong>
+				<strong>API key (required)</strong>
 			</td>
 			<td>
 				<?php 
@@ -26,7 +26,7 @@ $listid = $Deli_Mailchimp_Plugin -> get_list_id();
 		</tr>
 		<tr>
 			<td>
-				<strong>List ID</strong>
+				<strong>List ID (required)</strong>
 			</td>
 			<td>
 				<?php 

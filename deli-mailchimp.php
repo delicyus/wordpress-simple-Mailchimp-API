@@ -6,11 +6,14 @@ Version: 0.1.1
 Author: delicyus
 Author URI: http://delicyus.com
 License: GPL2
+Text Domain: deli-mailchimp
 */
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) { die; }
+if ( ! defined( 'WPINC' ) ) die; 
+
 /**
- * @example     echo do_shortcode('[formulaire-subscribe]');
+ * @example     into template page use : echo do_shortcode('[formulaire-subscribe]');
+ * @example     As shortcode use : [formulaire-subscribe][/formulaire-subscribe]
  *
  * @uses        MAILCHIMP V3
  *              https://developer.mailchimp.com/documentation/mailchimp/guides/manage-subscribers-with-the-mailchimp-api/
@@ -20,6 +23,9 @@ class Deli_Mailchimp_Plugin
 {
     public function __construct()
     {
+        // CSS 
+        add_action( 'wp_enqueue_scripts', array($this, "scripts_styles"));
+
         // TRAITEMENT $_POST
         add_action( 'wp_head', array($this , 'subscribe_do') );
 
@@ -36,11 +42,12 @@ class Deli_Mailchimp_Plugin
         $this -> subscribe_do = false;
 
         // STYLING CSS classes (optional customisation)
-        $this -> formClass          = 'nl-embed';
+        $this -> formClass          = 'mailchimp-subscribe nl-embed';
         $this -> textSuccessClass   = 'text-success';
         $this -> textErrorClass     = 'text-danger';
         $this -> formRowClass       = 'input-wrapper';
         $this -> submitBtnClass     = 'submit';
+        $this -> labelRequiredClass     = 'label-required';
         $this -> formID             = 'mailchimp-subscribe-form';
 
         // CREDENTIALS (required)
@@ -58,6 +65,16 @@ class Deli_Mailchimp_Plugin
 
 
     // RENDERING
+
+    // CS JS 
+    public function scripts_styles(){
+        wp_enqueue_style( 
+            'deli-mailchimp-css', 
+            plugin_dir_url(__FILE__) . '/css/styles.css' , 
+            '' ,  
+            strtotime(date('Y-m-d H:i:s') )  , 
+            'screen' );
+    }
 
     // RENDER FORMULAIRE
     private function render_formulaire(){
@@ -106,6 +123,7 @@ class Deli_Mailchimp_Plugin
                     <input type="text" name="lastname" value="<?php echo $_POST['lastname'];?>" />
                 </div>
                 <input type="submit" name="mailchimp-subscribe" value="<?php echo $this -> l_('recevoir-les-news'); ?>" class="<?php echo $this -> submitBtnClass; ?>" />
+                <p class="<?php echo $this -> labelRequiredClass; ?>">(*) Champs requis</p>
             </form>
         </div>
         <?php
@@ -142,15 +160,15 @@ class Deli_Mailchimp_Plugin
 
         // All plugins strings
         $strings = array(
-            'bravo'             => 'bravo',
-            'votre-e-mail'      => 'votre-e-mail',
-            'votre-nom'         => 'votre-nom',
-            'votre-prenom'      => 'votre-prenom',
-            'recevoir-les-news' => 'recevoir-les-news',
-            'oups-error'        => 'oups-error',
-            'err-email'         => 'err-email',
-            'err-firstname'     => 'err-firstname',
-            'err-lastname'      => 'err-lastname',
+            'bravo'             => 'Bravo !',
+            'votre-e-mail'      => 'Votre e-mail *',
+            'votre-nom'         => 'Votre nom *',
+            'votre-prenom'      => 'Votre pr&eacute;nom *',
+            'recevoir-les-news' => 'S\'abonner',
+            'oups-error'        => 'Oups ! Une erreur s\'est produite. R&eacute;essayez.',
+            'err-email'         => 'V&eacute;rifiez votre e-mail',
+            'err-firstname'     => 'Merci de saisir votre pr&eacute;nom',
+            'err-lastname'      => 'Merci de saisir votre nom',
             );
 
         // Return (string)
